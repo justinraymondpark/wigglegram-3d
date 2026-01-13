@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description"
+        content="Wigglegram viewer - Transform MPO stereo images into gyroscope-controlled 3D experiences">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>Wigglegram 3D</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">◈</span>
+                <span class="logo-text">Wigglegram 3D</span>
+            </div>
+            <div class="header-controls">
+                <button id="settingsBtn" class="icon-btn" title="Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Drop Zone / Upload Area -->
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-zone-content">
+                    <div class="drop-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <h2 class="drop-title">Drop your MPO file here</h2>
+                    <p class="drop-subtitle">or click to browse</p>
+                    <div class="supported-formats">
+                        <span class="format-badge">MPO</span>
+                        <span class="format-badge">JPG Pair</span>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".mpo,.jpg,.jpeg" multiple hidden>
+            </div>
+
+            <!-- 3D Viewer Area (hidden initially) -->
+            <div id="viewerArea" class="viewer-area hidden">
+                <div id="threeContainer" class="three-container"></div>
+
+                <!-- Gyroscope indicator -->
+                <div id="gyroIndicator" class="gyro-indicator">
+                    <div class="gyro-dot"></div>
+                    <div class="gyro-crosshair"></div>
+                </div>
+
+                <!-- Controls overlay -->
+                <div class="viewer-controls">
+                    <button id="prevBtn" class="nav-btn" title="Previous">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="image-counter">
+                        <span id="currentIndex">1</span> / <span id="totalCount">1</span>
+                    </div>
+                    <button id="nextBtn" class="nav-btn" title="Next">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Bottom toolbar -->
+                <div class="bottom-toolbar">
+                    <button id="calibrateBtn" class="toolbar-btn" title="Calibrate gyroscope">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="22" y1="12" x2="18" y2="12"></line>
+                            <line x1="6" y1="12" x2="2" y2="12"></line>
+                            <line x1="12" y1="6" x2="12" y2="2"></line>
+                            <line x1="12" y1="22" x2="12" y2="18"></line>
+                        </svg>
+                        <span>Calibrate</span>
+                    </button>
+                    <button id="toggleModeBtn" class="toolbar-btn active" title="Toggle input mode">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="2" y="7" width="20" height="10" rx="2"></rect>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                        <span>Gyro</span>
+                    </button>
+                    <button id="addMoreBtn" class="toolbar-btn" title="Add more images">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>Add</span>
+                    </button>
+                </div>
+
+                <!-- Processing indicator -->
+                <div id="processingOverlay" class="processing-overlay hidden">
+                    <div class="processing-content">
+                        <div class="spinner"></div>
+                        <p id="processingText">Computing depth map...</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="settings-panel hidden">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button id="closeSettingsBtn" class="icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="settings-content">
+                <div class="setting-group">
+                    <label class="setting-label">Sensitivity</label>
+                    <input type="range" id="sensitivitySlider" min="0.5" max="3" step="0.1" value="1.5">
+                    <span id="sensitivityValue" class="setting-value">1.5x</span>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Smoothing</label>
+                    <input type="range" id="smoothingSlider" min="0" max="0.95" step="0.05" value="0.85">
+                    <span id="smoothingValue" class="setting-value">0.85</span>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Depth Intensity</label>
+                    <input type="range" id="depthSlider" min="0.1" max="2" step="0.1" value="0.8">
+                    <span id="depthValue" class="setting-value">0.8</span>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Mesh Resolution</label>
+                    <select id="meshResSelect" class="setting-select">
+                        <option value="64">Low (64)</option>
+                        <option value="128" selected>Medium (128)</option>
+                        <option value="256">High (256)</option>
+                        <option value="512">Ultra (512)</option>
+                    </select>
+                </div>
+                <div class="setting-group toggle-group">
+                    <label class="setting-label">Show Gyro Indicator</label>
+                    <label class="toggle">
+                        <input type="checkbox" id="showGyroToggle" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permission Request Modal -->
+        <div id="permissionModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5">
+                        <rect x="2" y="7" width="20" height="10" rx="2"></rect>
+                        <circle cx="12" cy="12" r="2"></circle>
+                        <path d="M12 2v3M12 19v3M2 12H5M19 12h3"></path>
+                    </svg>
+                </div>
+                <h2>Enable Motion Sensors</h2>
+                <p>To experience the 3D wigglegram effect, we need access to your device's gyroscope.</p>
+                <button id="requestPermBtn" class="primary-btn">Enable Gyroscope</button>
+                <button id="skipPermBtn" class="secondary-btn">Use Touch/Mouse Instead</button>
+            </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <script src="mpo-parser.js"></script>
+    <script src="depth-processor.js"></script>
+    <script src="wiggle-viewer.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

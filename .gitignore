@@ -1,0 +1,17 @@
+# Certificates
+*.pem
+
+# Samples (too large for git)
+samples/*.MPO
+samples/*.mpo
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
